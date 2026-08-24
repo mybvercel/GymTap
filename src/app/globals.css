@@ -383,3 +383,12 @@ body {
 .marco > .panel + .panel {
   margin-top: 0.75rem;
 }
+
+/* El boton manual es la red por si el navegador no avisa que volvieron. */
+.marco > .accion {
+  margin-top: 0.75rem;
+}
+
+.marco.centrado > .accion {
+  max-width: 20rem;
+}

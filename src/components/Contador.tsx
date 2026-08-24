@@ -16,45 +16,93 @@ import { borrarUltimaSerie, leerEtiqueta } from "@/lib/sesion";
 import { Descanso } from "./Descanso";
 
 /**
- * La pantalla única.
+ * La pantalla única: el destino del chip NFC.
  *
- * Es el destino del chip NFC: abrir esta página YA cuenta como pasar el
- * teléfono, así que registra una serie y muestra el descanso. No hay nada que
- * tocar ni que confirmar.
+ * Pasar el teléfono registra una serie. El problema es que "pasar el teléfono"
+ * no siempre significa lo mismo para el navegador:
+ *
+ *  - Si la app estaba cerrada, Android abre la página: hay carga nueva.
+ *  - Si la app YA estaba abierta, Android no recarga nada: solo trae la
+ *    pestaña al frente. La página no se entera de que la abrieron de nuevo.
+ *
+ * El segundo caso es el habitual en el gimnasio, así que la serie no se
+ * registra al cargar la página sino al quedar la pantalla a la vista, que es
+ * lo que pasa en los dos casos. La ventana anti rebote evita que la carga
+ * inicial cuente dos veces.
  */
 export function Contador() {
   const [sesion, setSesion] = useState<Sesion | null>(null);
   const [ajustes, setAjustes] = useState<Ajustes | null>(null);
+  const [cargando, setCargando] = useState(true);
   const [peso, setPeso] = useState(0);
   const [reps, setReps] = useState(10);
   const [descansando, setDescansando] = useState(false);
-  const yaProceso = useRef(false);
 
-  // Una sola vez por carga: cada lectura del NFC es una navegación nueva, y
-  // eso es exactamente lo que cuenta como pasar el teléfono.
+  // Espejo del estado para los escuchas del navegador, que si no leerían los
+  // valores del primer render para siempre.
+  const actual = useRef({ sesion, ajustes, peso, reps });
   useEffect(() => {
-    if (yaProceso.current) return;
-    yaProceso.current = true;
+    actual.current = { sesion, ajustes, peso, reps };
+  });
 
+  const registrar = useCallback(async (ventana?: number) => {
+    const c = actual.current;
+    const prefs = c.ajustes ?? (await leerAjustes());
+    const previa = c.sesion ?? (await leerSesionActiva());
+
+    const lectura = leerEtiqueta(
+      previa,
+      {
+        peso: c.peso,
+        reps: c.reps,
+        unidad: prefs.unidad,
+        seriesTotales: previa?.seriesTotales ?? prefs.seriesTotales,
+      },
+      Date.now(),
+      ventana,
+    );
+
+    setSesion(lectura.sesion);
+    await guardarSesionActiva(lectura.sesion);
+    if (lectura.tipo === "serie-registrada") setDescansando(true);
+  }, []);
+
+  // Arranque: se traen la sesión y la carga guardadas antes de contar nada.
+  useEffect(() => {
+    let vivo = true;
     (async () => {
       const [previa, prefs] = await Promise.all([leerSesionActiva(), leerAjustes()]);
       const sugerida = previa?.series.at(-1) ?? (await ultimaCarga());
-      const carga = {
-        peso: sugerida?.peso ?? 0,
-        reps: sugerida?.reps ?? 10,
-        unidad: prefs.unidad,
-        seriesTotales: previa?.seriesTotales ?? prefs.seriesTotales,
-      };
-
-      const lectura = leerEtiqueta(previa, carga);
+      if (!vivo) return;
+      const carga = { peso: sugerida?.peso ?? 0, reps: sugerida?.reps ?? 10 };
       setAjustes(prefs);
       setPeso(carga.peso);
       setReps(carga.reps);
-      setSesion(lectura.sesion);
-      await guardarSesionActiva(lectura.sesion);
-      if (lectura.tipo === "serie-registrada") setDescansando(true);
+      setSesion(previa);
+      actual.current = { sesion: previa, ajustes: prefs, ...carga };
+      setCargando(false);
+      await registrar();
     })();
-  }, []);
+    return () => {
+      vivo = false;
+    };
+  }, [registrar]);
+
+  // Volver a la vista es la señal de que pasaron el teléfono.
+  useEffect(() => {
+    if (cargando) return;
+    const alVolver = () => {
+      if (document.visibilityState === "visible") void registrar();
+    };
+    document.addEventListener("visibilitychange", alVolver);
+    window.addEventListener("focus", alVolver);
+    window.addEventListener("pageshow", alVolver);
+    return () => {
+      document.removeEventListener("visibilitychange", alVolver);
+      window.removeEventListener("focus", alVolver);
+      window.removeEventListener("pageshow", alVolver);
+    };
+  }, [cargando, registrar]);
 
   const actualizar = useCallback(async (nueva: Sesion) => {
     setSesion(nueva);
@@ -83,7 +131,7 @@ export function Contador() {
     await guardarAjustes(prefs);
   }
 
-  if (!sesion || !ajustes) {
+  if (cargando || !ajustes) {
     return (
       <main className="marco centrado">
         <p className="suave">Registrando…</p>
@@ -92,12 +140,15 @@ export function Contador() {
   }
 
   // Terminada la tanda, la pantalla queda limpia hasta el próximo pase.
-  if (sesion.series.length === 0) {
+  if (!sesion || sesion.series.length === 0) {
     return (
       <main className="marco centrado">
         <p className="eyebrow">Listo</p>
         <h1 className="titulo">Pasá el teléfono para empezar</h1>
         <p className="suave">Cada vez que lo pases queda registrada una serie.</p>
+        <button type="button" className="accion" onClick={() => registrar(0)}>
+          Registrar serie
+        </button>
         <Link href="/historial" className="secundaria enlace">
           Ver historial
         </Link>
@@ -133,6 +184,11 @@ export function Contador() {
           </button>
         </div>
       </section>
+
+      {/* Red de seguridad: si el teléfono no dispara nada, el dedo sí. */}
+      <button type="button" className="accion" onClick={() => registrar(0)}>
+        Registrar serie
+      </button>
 
       {descansando ? (
         <Descanso

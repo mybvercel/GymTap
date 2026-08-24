@@ -82,4 +82,11 @@ prueba("el volumen es peso por reps sumado", () => {
   assert.equal(volumen(s.series), 40 * 10 + 50 * 8);
 });
 
+prueba("el boton manual no queda atrapado por la ventana anti rebote", () => {
+  const a = leerEtiqueta(null, CARGA, 1000);
+  const b = leerEtiqueta(a.sesion, CARGA, 1500, 0);
+  assert.equal(b.tipo, "serie-registrada");
+  assert.equal(b.sesion.series.length, 2);
+});
+
 console.log(`\n${ok} pruebas pasaron`);

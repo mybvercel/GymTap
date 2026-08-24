@@ -34,11 +34,12 @@ export function leerEtiqueta(
   sesionPrevia: Sesion | null,
   carga: { peso: number; reps: number; unidad: Unidad; seriesTotales: number },
   ahora = Date.now(),
+  ventana = VENTANA_ANTI_REBOTE_MS,
 ): Lectura {
   const sesion: Sesion = sesionPrevia ?? nuevaSesion(carga.seriesTotales, ahora);
   const ultima = sesion.series[sesion.series.length - 1];
 
-  if (ultima && ahora - ultima.ts < VENTANA_ANTI_REBOTE_MS) {
+  if (ultima && ahora - ultima.ts < ventana) {
     return { tipo: "rebote", sesion };
   }
 

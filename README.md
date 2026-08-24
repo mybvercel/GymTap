@@ -41,6 +41,13 @@ dispositivo.
 
 ## Decisiones que no son obvias
 
+**La serie se registra al volver a la vista, no al cargar la pagina.**
+Si la app estaba cerrada, el chip la abre y hay carga nueva. Pero si ya estaba
+abierta, Android no recarga nada: solo trae la pestana al frente, y una app que
+cuenta al cargar se queda muda justo en el caso mas comun. Escuchar
+`visibilitychange` cubre los dos. Ademas hay un boton **Registrar serie** por si
+el navegador no avisa nada.
+
 **Ventana anti rebote de 4 segundos.** El NFC dispara la lectura apenas el
 teléfono se acerca, y es facilísimo que lea dos veces en el mismo gesto. Sin
 esa ventana, apoyar el celular registraría dos series. Cuatro segundos filtra
