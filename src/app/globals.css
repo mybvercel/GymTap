@@ -293,3 +293,93 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ------------------------------------------------ Pantalla del contador */
+.centrado {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+/* El número es lo único que se mira de reojo entre serie y serie. */
+.registro {
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+}
+
+.contador {
+  font-size: clamp(5.5rem, 30vw, 9rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accion);
+  margin: 0.5rem 0 1rem;
+}
+
+.contador span {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--texto-suave);
+  margin-top: 0.5rem;
+}
+
+.ajuste-series {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.paso.chico {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 1.25rem;
+}
+
+.dos-columnas {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.acciones > * {
+  flex: 1;
+}
+
+.enlace {
+  display: grid;
+  place-content: center;
+  text-decoration: none;
+  margin-top: 0.75rem;
+}
+
+.fuerte {
+  font-weight: 700;
+}
+
+.chico {
+  font-size: 0.875rem;
+  margin: 0.75rem 0 0;
+}
+
+.lista {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.marco > section + section,
+.marco > .panel + .panel {
+  margin-top: 0.75rem;
+}
