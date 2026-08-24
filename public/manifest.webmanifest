@@ -1,0 +1,14 @@
+{
+  "name": "GymTap",
+  "short_name": "GymTap",
+  "description": "Acercás el teléfono a la máquina y la serie queda registrada.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GymTap
 
-## Getting Started
+Acercás el teléfono a la máquina y la serie queda registrada.
 
-First, run the development server:
+Sin cuentas, sin formularios y sin depender de la señal del gimnasio.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## La idea
+
+Cada máquina del gimnasio tiene pegada una etiqueta NFC y un QR, los dos
+apuntando a la misma dirección corta: `/e/<estacion>`.
+
+- **La primera lectura** abre el ejercicio. La persona recién llegó a la
+  máquina y todavía no levantó nada.
+- **Cada lectura siguiente** registra una serie y arranca el descanso.
+
+Ese es el producto entero. El gesto de acercar el teléfono reemplaza al
+formulario: no hay que escribir, ni elegir de una lista, ni confirmar. El peso
+y las repeticiones vienen de la serie anterior, o de la última vez que se hizo
+ese ejercicio, y corregirlos es opcional.
+
+## Por qué no hay backend
+
+Un gimnasio es un sótano con paredes de hormigón y sin señal. Una app que
+necesita la red para registrar una serie no sirve justo cuando hace falta.
+
+Todo vive en el teléfono, en IndexedDB. Registrar es instantáneo, funciona en
+modo avión y no hay cuenta que crear antes de entrenar. El costo es que el
+historial es de ese dispositivo: si el prototipo funciona, ahí se decide si
+vale la pena sincronizar.
+
+## Arquitectura
+
+```
+src/
+  lib/
+    dominio.ts     Tipos y reglas de cálculo. Sin dependencias.
+    catalogo.ts    Ejercicios y estaciones del gimnasio (hoy, datos en código).
+    almacen.ts     Persistencia en IndexedDB. Lo único que toca el disco.
+    sesion.ts      Las reglas del entrenamiento. Funciones puras.
+  components/
+    PantallaEstacion.tsx  La pantalla que abre la etiqueta.
+    Descanso.tsx          Temporizador de descanso.
+    ResumenSesion.tsx     El entrenamiento en curso.
+    ListaHistorial.tsx    Entrenamientos guardados.
+    PanelEstaciones.tsx   QR y escritura de chips NFC.
+  app/
+    e/[estacion]/  Destino de la etiqueta NFC y del QR.
+    historial/     Historial con filtros por ejercicio y grupo muscular.
+    panel/         Panel del gimnasio.
+pruebas/
+  sesion.test.ts   Las reglas del tap, sin navegador.
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La separación importante es entre `sesion.ts` y todo lo demás. Las reglas del
+entrenamiento son funciones puras que reciben una sesión y devuelven otra: se
+prueban sin navegador y sin base de datos. Persistir es problema de
+`almacen.ts`; pintar, de los componentes.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Decisiones que no son obvias
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**La estación no es el ejercicio.** Un banco plano sirve para varios
+ejercicios, y un gimnasio puede tener tres poleas idénticas. Cada etiqueta
+apunta a una estación, y la estación decide qué ejercicio abre. Sin esa
+separación no se puede saber qué máquina se usa más.
 
-## Learn More
+**Ventana anti rebote de 4 segundos.** El NFC dispara la lectura apenas el
+teléfono se acerca, y es facilísimo que lea dos veces en el mismo gesto. Sin
+esa ventana, apoyar el celular registraría dos series. Cuatro segundos filtra
+el rebote sin molestar: nadie hace dos series en cuatro segundos.
 
-To learn more about Next.js, take a look at the following resources:
+**El descanso se mide, no se pide.** Cada serie guarda cuánto se descansó
+realmente antes de ella, calculado entre marcas de tiempo. Es un dato que sale
+gratis y que nadie cargaría a mano.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**El temporizador cuenta contra una marca de tiempo futura**, no restando de a
+un segundo. Cuando el teléfono se bloquea, el navegador frena los intervalos y
+un contador se atrasaría. Comparar contra el reloj hace que al volver a mirar
+el número sea el correcto.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Web NFC es una mejora, no un requisito.** Solo existe en Chrome sobre
+Android y con HTTPS. La app entera funciona con el QR, y el panel avisa cuando
+el navegador no puede escribir chips.
 
-## Deploy on Vercel
+## Correr el proyecto
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm install
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Queda en `http://localhost:3010`. Para probar el flujo sin etiquetas, entrá a
+`/` y elegí una máquina de la lista: navegar a `/e/<estacion>` es exactamente
+lo que hace el NFC.
+
+Hay 17 pruebas, que corren sin navegador:
+
+```bash
+npm test
+```
+
+Cubren las reglas del tap (`pruebas/sesion.test.ts`) y las etiquetas
+(`pruebas/etiquetas.test.ts`), que además **generan cada QR y lo vuelven a
+decodificar**: si un QR sale mal hay que despegar y reimprimir todo, así que no
+alcanza con confiar en que la librería hace lo suyo.
+
+## Estado
+
+Prototipo funcionando: lectura de etiqueta, registro de series, descanso,
+historial con filtros, generación de QR y escritura de chips NFC.
+
+Lo que todavía no está: service worker para que la PWA abra sin red, edición
+del catálogo desde el panel (hoy los ejercicios y las estaciones viven en
+`catalogo.ts`), unidades en libras y compartir el resumen.

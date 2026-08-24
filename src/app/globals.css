@@ -1,26 +1,295 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------
+   Tokens.
+
+   La pantalla se mira de reojo, con una mano, entre serie y serie y con
+   las manos transpiradas. De ahí salen las decisiones: fondo oscuro para
+   no encandilar bajo las luces del gimnasio, números enormes que se leen
+   a un metro, y ningún objetivo táctil por debajo de 56px.
+   ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --fondo: #0b0d10;
+  --panel: #14181d;
+  --panel-alto: #1c2128;
+  --linea: #262c34;
+
+  --texto: #f2f5f7;
+  --texto-suave: #a3adb8;
+  --texto-tenue: #6b7683;
+
+  --accion: #d7ff3e;
+  --accion-oscura: #b8dd22;
+  --sobre-accion: #0b0d10;
+
+  --descanso: #4aa8ff;
+  --alerta: #ff6b5a;
+  --ok: #4ade80;
+
+  --radio: 14px;
+  --radio-chico: 8px;
+
+  --toque-min: 56px;
+
+  --curva: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* En una app de gimnasio nadie quiere seleccionar texto sin querer. */
+  user-select: none;
+}
+
+/* La pantalla ocupa el alto real del visor, con el pulgar cerca de la acción. */
+.marco {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+:focus-visible {
+  outline: 3px solid var(--accion);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------- Tipografía */
+.titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texto-tenue);
+  margin: 0;
+}
+
+.suave {
+  color: var(--texto-suave);
+}
+
+/* ----------------------------------------------------- Número gigante */
+.numeron {
+  font-size: clamp(4.5rem, 22vw, 7rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------- Panel */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 1rem;
+}
+
+/* -------------------------------------------------------------- Acción */
+.accion {
+  width: 100%;
+  min-height: 76px;
+  border: 0;
+  border-radius: var(--radio);
+  background: var(--accion);
+  color: var(--sobre-accion);
+  font-family: inherit;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 120ms var(--curva), background-color 160ms ease;
+}
+
+.accion:active {
+  transform: scale(0.98);
+  background: var(--accion-oscura);
+}
+
+.accion[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secundaria {
+  min-height: var(--toque-min);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  background: var(--panel-alto);
+  color: var(--texto);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding-inline: 1rem;
+  cursor: pointer;
+  transition: transform 120ms var(--curva), border-color 160ms ease;
+}
+
+.secundaria:active {
+  transform: scale(0.97);
+}
+
+/* ------------------------------------------------ Selector de carga */
+.carga {
+  display: grid;
+  grid-template-columns: var(--toque-min) 1fr var(--toque-min);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paso {
+  min-height: var(--toque-min);
+  min-width: var(--toque-min);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  background: var(--panel-alto);
+  color: var(--texto);
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 100ms var(--curva);
+}
+
+.paso:active {
+  transform: scale(0.94);
+}
+
+.valor {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.valor span {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-tenue);
+}
+
+/* ---------------------------------------------------------- Progreso */
+.serie-puntos {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.punto {
+  height: 8px;
+  flex: 1;
+  min-width: 18px;
+  border-radius: 4px;
+  background: var(--linea);
+}
+
+.punto[data-hecha="true"] {
+  background: var(--accion);
+}
+
+/* --------------------------------------------------------- Descanso */
+.descanso-num {
+  color: var(--descanso);
+}
+
+.aro {
+  transform: rotate(-90deg);
+}
+
+.aro circle {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.aro .pista {
+  stroke: var(--linea);
+}
+
+.aro .avance {
+  stroke: var(--descanso);
+  transition: stroke-dashoffset 900ms linear;
+}
+
+/* ------------------------------------------------------------- Lista */
+.fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--linea);
+}
+
+.fila:last-child {
+  border-bottom: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: var(--panel-alto);
+  border: 1px solid var(--linea);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+/* Aviso de que la serie entró: aparece y se va sin pedir nada. */
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--accion);
+  color: var(--sobre-accion);
+  font-weight: 800;
+  padding: 0.875rem 1.5rem;
+  border-radius: 999px;
+  animation: entra 260ms var(--curva);
+}
+
+@keyframes entra {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
