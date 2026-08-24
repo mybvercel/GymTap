@@ -40,10 +40,10 @@ export type Lectura =
 /**
  * El corazón de la app: acercar el teléfono a la etiqueta.
  *
- * La primera lectura en una estación abre el ejercicio y no registra nada,
- * porque la persona recién llega a la máquina y todavía no levantó. Cada
- * lectura posterior registra una serie: ese es el gesto que reemplaza a
- * escribir en un formulario.
+ * Toda lectura registra una serie, incluida la primera. El gesto real es
+ * "hago la serie y paso el celular", así que si la primera no registrara,
+ * quedaría siempre una serie sin anotar. Para mirar el ejercicio sin anotar
+ * nada están el QR y la lista del inicio.
  */
 export function leerEtiqueta(
   sesionPrevia: Sesion | null,
@@ -55,18 +55,30 @@ export function leerEtiqueta(
   const sesion: Sesion = sesionPrevia ?? { id: crypto.randomUUID(), inicio: ahora, bloques: [] };
   const abierto = bloqueDe(sesion, estacionId);
 
-  // Primera lectura en esta estación: se abre el ejercicio y se cierra el
-  // anterior, porque la persona se movió de máquina.
+  // Primera lectura en esta estación: se abre el ejercicio Y se registra la
+  // serie, porque el gesto es "hice la serie, paso el celular". Se cierra el
+  // bloque anterior, ya que la persona se movió de máquina.
   if (!abierto) {
     const bloques = sesion.bloques.map((b) => (b.cerrado ? b : { ...b, cerrado: true }));
+    const primera: Serie = {
+      n: 1,
+      peso: carga.peso,
+      reps: carga.reps,
+      unidad: carga.unidad,
+      ts: ahora,
+    };
     const nuevo: BloqueEjercicio = {
       ejercicioId,
       estacionId,
       inicio: ahora,
-      series: [],
+      series: [primera],
       cerrado: false,
     };
-    return { tipo: "abierto", sesion: { ...sesion, bloques: [...bloques, nuevo] } };
+    return {
+      tipo: "serie-registrada",
+      sesion: { ...sesion, bloques: [...bloques, nuevo] },
+      serie: primera,
+    };
   }
 
   const ultima = abierto.series[abierto.series.length - 1];

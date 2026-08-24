@@ -9,9 +9,10 @@ Sin cuentas, sin formularios y sin depender de la señal del gimnasio.
 Cada máquina del gimnasio tiene pegada una etiqueta NFC y un QR, los dos
 apuntando a la misma dirección corta: `/e/<estacion>`.
 
-- **La primera lectura** abre el ejercicio. La persona recién llegó a la
-  máquina y todavía no levantó nada.
-- **Cada lectura siguiente** registra una serie y arranca el descanso.
+**Cada lectura registra una serie** y arranca el descanso, incluida la
+primera. El gesto real es: llego, hago la serie, paso el celular.
+
+Para mirar un ejercicio sin anotar nada están el QR y la lista del inicio.
 
 Ese es el producto entero. El gesto de acercar el teléfono reemplaza al
 formulario: no hay que escribir, ni elegir de una lista, ni confirmar. El peso
