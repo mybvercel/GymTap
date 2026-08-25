@@ -48,6 +48,19 @@ export async function guardarAjustes(ajustes: Ajustes): Promise<void> {
   await set(CLAVE_AJUSTES, ajustes);
 }
 
+const CLAVE_RESENA = "gymtap:resena";
+
+/** `true` si todavía no toca volver a pedir la reseña del gimnasio. */
+export async function leerResena(): Promise<boolean> {
+  const hasta = await get<number>(CLAVE_RESENA);
+  return hasta !== undefined && Date.now() < hasta;
+}
+
+/** Guarda hasta cuándo no se vuelve a pedir la reseña. */
+export async function posponerResena(dias: number): Promise<void> {
+  await set(CLAVE_RESENA, Date.now() + dias * 24 * 60 * 60 * 1000);
+}
+
 /** Última carga usada, para no tener que cargar el peso otra vez. */
 export async function ultimaCarga(): Promise<{ peso: number; reps: number } | null> {
   const historial = await leerHistorial();

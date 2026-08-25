@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DESCANSOS } from "@/lib/dominio";
+import { audioListo, cancelarAlarma, prepararAudio, programarAlarma, vibrarAlarma } from "@/lib/alarma";
 
 interface Props {
   segundos: number;
@@ -25,6 +26,7 @@ export function Descanso({ segundos, sonido, vibracion, onTerminar, onCambiarPre
   const [pausadoEn, setPausadoEn] = useState<number | null>(null);
   const [restante, setRestante] = useState(segundos);
   const [total, setTotal] = useState(segundos);
+  const [audioOk, setAudioOk] = useState(true);
   const yaAviso = useRef(false);
 
   useEffect(() => {
@@ -32,9 +34,12 @@ export function Descanso({ segundos, sonido, vibracion, onTerminar, onCambiarPre
       const ahora = pausadoEn ?? Date.now();
       const seg = Math.max(0, Math.ceil((finTs - ahora) / 1000));
       setRestante(seg);
+      setAudioOk(audioListo());
       if (seg === 0 && !yaAviso.current) {
         yaAviso.current = true;
-        avisar({ sonido, vibracion });
+        // El sonido ya venía programado; acá solo queda la vibración, que no
+        // se puede agendar de antemano.
+        if (vibracion) vibrarAlarma();
       }
     };
     tick();
@@ -47,6 +52,23 @@ export function Descanso({ segundos, sonido, vibracion, onTerminar, onCambiarPre
       document.removeEventListener("visibilitychange", alVolver);
     };
   }, [finTs, pausadoEn, sonido, vibracion]);
+
+  // La alarma se agenda contra el reloj del audio apenas se sabe cuándo termina
+  // el descanso, así suena a horario aunque el teléfono esté en el bolsillo.
+  useEffect(() => {
+    if (!sonido || pausadoEn !== null) {
+      cancelarAlarma();
+      return;
+    }
+    programarAlarma((finTs - Date.now()) / 1000);
+    return cancelarAlarma;
+  }, [finTs, pausadoEn, sonido]);
+
+  const activarSonido = useCallback(() => {
+    prepararAudio();
+    setAudioOk(audioListo());
+    if (pausadoEn === null) programarAlarma((finTs - Date.now()) / 1000);
+  }, [finTs, pausadoEn]);
 
   const ajustar = useCallback((delta: number) => {
     const ahora = Date.now();
@@ -81,7 +103,12 @@ export function Descanso({ segundos, sonido, vibracion, onTerminar, onCambiarPre
   const avance = total > 0 ? Math.min(1, restante / total) : 0;
 
   return (
-    <section className="panel" style={{ display: "grid", gap: "1rem", justifyItems: "center" }}>
+    <section
+      className="panel"
+      style={{ display: "grid", gap: "1rem", justifyItems: "center" }}
+      // Cualquier toque sirve para destrabar el audio antes de que haga falta.
+      onPointerDown={prepararAudio}
+    >
       <p className="eyebrow">{terminado ? "Descanso terminado" : "Descansando"}</p>
 
       <div style={{ position: "relative", width: 220, height: 220 }}>
@@ -116,6 +143,14 @@ export function Descanso({ segundos, sonido, vibracion, onTerminar, onCambiarPre
       <p role="status" style={{ margin: 0, minHeight: "1.5rem", fontWeight: 700 }}>
         {terminado ? "Listo para la próxima serie" : " "}
       </p>
+
+      {/* El chip abre la app sin ningún toque, y sin toque el navegador no deja
+          sonar nada. Se avisa en vez de fallar en silencio. */}
+      {sonido && !audioOk && !terminado && (
+        <button type="button" className="secundaria" style={{ width: "100%" }} onClick={activarSonido}>
+          Activar la alarma
+        </button>
+      )}
 
       <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
         <button type="button" className="secundaria" style={{ flex: 1 }} onClick={() => ajustar(-15)}>
@@ -160,31 +195,4 @@ function formatear(seg: number): string {
   const m = Math.floor(seg / 60);
   const s = seg % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
-}
-
-/**
- * Aviso de fin de descanso. Vibración y un pitido corto generado en el momento,
- * para no cargar un archivo de audio que ademas el navegador puede bloquear.
- */
-function avisar({ sonido, vibracion }: { sonido: boolean; vibracion: boolean }) {
-  if (vibracion && typeof navigator !== "undefined" && "vibrate" in navigator) {
-    navigator.vibrate([120, 60, 120]);
-  }
-  if (!sonido) return;
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gan = ctx.createGain();
-    osc.frequency.value = 880;
-    gan.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gan.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
-    gan.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
-    osc.connect(gan).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.5);
-    osc.onended = () => void ctx.close();
-  } catch {
-    /* Sin audio disponible: la vibración ya avisó. */
-  }
 }

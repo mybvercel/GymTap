@@ -392,3 +392,54 @@ body {
 .marco.centrado > .accion {
   max-width: 20rem;
 }
+
+/* -------------------------------------------------------- Resena de Google */
+.resena {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--panel);
+  text-align: center;
+  width: 100%;
+}
+
+.estrellas {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin: 0.5rem 0 0.375rem;
+}
+
+.estrella {
+  min-height: 44px;
+  min-width: 44px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 1.875rem;
+  line-height: 1;
+  /* Gris hasta que la tocan: una estrella ya dorada no invita a nada. */
+  color: var(--linea);
+  transition: color 120ms ease, transform 120ms var(--curva);
+}
+
+.estrella[data-activa="true"] {
+  color: #ffc531;
+}
+
+.estrella:active {
+  transform: scale(0.9);
+}
+
+.enlace-tenue {
+  margin-top: 0.5rem;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--texto-tenue);
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  cursor: pointer;
+}

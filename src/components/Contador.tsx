@@ -14,6 +14,7 @@ import {
 } from "@/lib/almacen";
 import { borrarUltimaSerie, leerEtiqueta } from "@/lib/sesion";
 import { Descanso } from "./Descanso";
+import { Resena } from "./Resena";
 
 /**
  * La pantalla única: el destino del chip NFC.
@@ -152,6 +153,7 @@ export function Contador() {
         <Link href="/historial" className="secundaria enlace">
           Ver historial
         </Link>
+        <Resena />
       </main>
     );
   }
@@ -238,6 +240,8 @@ export function Contador() {
       <Link href="/historial" className="secundaria enlace">
         Historial
       </Link>
+
+      <Resena />
     </main>
   );
 }

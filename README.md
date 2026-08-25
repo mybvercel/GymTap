@@ -62,6 +62,19 @@ un segundo. Cuando el teléfono se bloquea el navegador frena los intervalos y
 un contador se atrasaría. Comparar contra el reloj hace que al volver a mirar,
 el número sea el correcto.
 
+**La alarma se agenda contra el reloj del audio, no con un `setTimeout`.**
+Cuando el telefono se guarda en el bolsillo, el navegador frena los
+temporizadores de JavaScript: una alarma armada con `setTimeout` llega tarde o
+no llega. Los pitidos se programan de antemano en el motor de audio, que sigue
+su propio reloj. Como el chip abre la app sin ningun toque y sin toque el
+navegador no deja sonar nada, aparece un boton **Activar la alarma** cuando el
+audio esta bloqueado, en vez de fallar en silencio.
+
+**Las cinco estrellas de la resena llevan todas al mismo lugar.** Mandar a
+Google solo las buenas y desviar las malas es review gating: esta prohibido y
+ademas se nota. La puntuacion real se elige en Google. La tarjeta se calla tres
+meses despues de puntuar y una semana con "Ahora no".
+
 **El contador no se corta en el objetivo.** Si hacés 6 series de 4, muestra
 6 de 4. El objetivo orienta, no manda.
 
