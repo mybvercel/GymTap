@@ -446,3 +446,14 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.mapa {
+  width: 100%;
+  height: 160px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  display: block;
+  /* El mapa viene en claro y la app es oscura: se baja un punto para que no
+     encandile cuando se mira el telefono en un gimnasio de noche. */
+  filter: brightness(0.92);
+}

@@ -6,6 +6,10 @@ import { leerResena, posponerResena } from "@/lib/almacen";
 /** El lugar del gimnasio en Google, donde se deja la reseña. */
 const GOOGLE = "https://share.google/fHAdLWPtm5W4c01Gg";
 
+/** El nombre tiene que coincidir con la ficha, o el mapa muestra otra cosa. */
+const LUGAR = "Mc Pilates Las Delicias";
+const MAPA = `https://www.google.com/maps?q=${encodeURIComponent(LUGAR)}&output=embed`;
+
 /**
  * Invitación a puntuar el gimnasio en Google.
  *
@@ -55,9 +59,20 @@ export function Resena() {
   return (
     <section className="resena">
       <p className="eyebrow">Tu opinión</p>
-      <p className="fuerte" style={{ margin: "0.25rem 0 0" }}>
-        ¿Cómo estuvo el gimnasio hoy?
+      <p className="fuerte" style={{ margin: "0.25rem 0 0.75rem" }}>
+        ¿Cómo estuvo {LUGAR} hoy?
       </p>
+
+      {/* El mapa se ve acá adentro, sin salir de la app. Escribir la reseña sí
+          abre Google: no deja meter su formulario en un iframe, a propósito.
+          Carga diferida porque está al final de la pantalla y casi nunca se ve. */}
+      <iframe
+        className="mapa"
+        src={MAPA}
+        title={`${LUGAR} en Google Maps`}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
 
       <div
         className="estrellas"
