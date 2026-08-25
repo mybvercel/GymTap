@@ -3,8 +3,18 @@
 import { useEffect, useState } from "react";
 import { leerResena, posponerResena } from "@/lib/almacen";
 
-/** El lugar del gimnasio en Google, donde se deja la reseña. */
-const GOOGLE = "https://share.google/fHAdLWPtm5W4c01Gg";
+/**
+ * Enlace directo al cuadro de estrellas de Google.
+ *
+ * El link para compartir de Google abre la ficha del negocio, donde hay que
+ * buscar "Reseñas" y después "Escribir una reseña": tres pasos y la mitad de la
+ * gente abandona. Este endpoint abre el formulario de una.
+ *
+ * El identificador sale del que Google usa internamente para el lugar
+ * (`0x94329f005adc61f5:0x6c484ae8c2bb721b`), reordenado al formato `ChIJ…`, que
+ * es el mismo dato en otra codificación.
+ */
+const GOOGLE = "https://search.google.com/local/writereview?placeid=ChIJ9WHcWgCfMpQRG3K7wuhKSGw";
 
 /** El nombre tiene que coincidir con la ficha, o el mapa muestra otra cosa. */
 const LUGAR = "Mc Pilates Las Delicias";
@@ -98,7 +108,7 @@ export function Resena() {
       </div>
 
       <p className="suave chico" style={{ margin: 0 }}>
-        {gracias ? "¡Gracias! Se abrió Google en otra pestaña." : "Se abre Google para dejar la reseña."}
+        {gracias ? "¡Gracias! Se abrió el cuadro de Google." : "Se abre directo el cuadro de estrellas de Google."}
       </p>
 
       {!gracias && (
