@@ -19,6 +19,7 @@ const GOOGLE = "https://share.google/fHAdLWPtm5W4c01Gg";
 export function Resena() {
   const [visible, setVisible] = useState(false);
   const [marcadas, setMarcadas] = useState(0);
+  const [gracias, setGracias] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -32,11 +33,18 @@ export function Resena() {
 
   if (!visible) return null;
 
-  async function puntuar(n: number) {
+  /**
+   * Se llama DESPUÉS de que el enlace ya abrió Google.
+   *
+   * La versión anterior usaba `window.open` detrás de un `await`: para cuando
+   * la base de datos respondía, el navegador ya no consideraba el gesto de la
+   * persona y bloqueaba la ventana. La tarjeta desaparecía y no se abría nada.
+   * Un enlace de verdad no tiene ese problema.
+   */
+  function marcar(n: number) {
     setMarcadas(n);
-    await posponerResena(90);
-    window.open(GOOGLE, "_blank", "noopener,noreferrer");
-    setVisible(false);
+    setGracias(true);
+    void posponerResena(90);
   }
 
   async function ahoraNo() {
@@ -58,27 +66,31 @@ export function Resena() {
         aria-label="Puntuar el gimnasio en Google"
       >
         {[1, 2, 3, 4, 5].map((n) => (
-          <button
+          <a
             key={n}
-            type="button"
             className="estrella"
+            href={GOOGLE}
+            target="_blank"
+            rel="noopener noreferrer"
             data-activa={n <= marcadas}
             aria-label={`${n} ${n === 1 ? "estrella" : "estrellas"}`}
             onPointerEnter={() => setMarcadas(n)}
-            onClick={() => puntuar(n)}
+            onClick={() => marcar(n)}
           >
             ★
-          </button>
+          </a>
         ))}
       </div>
 
       <p className="suave chico" style={{ margin: 0 }}>
-        Se abre Google para dejar la reseña.
+        {gracias ? "¡Gracias! Se abrió Google en otra pestaña." : "Se abre Google para dejar la reseña."}
       </p>
 
-      <button type="button" className="enlace-tenue" onClick={ahoraNo}>
-        Ahora no
-      </button>
+      {!gracias && (
+        <button type="button" className="enlace-tenue" onClick={ahoraNo}>
+          Ahora no
+        </button>
+      )}
     </section>
   );
 }

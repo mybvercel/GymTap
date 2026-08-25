@@ -412,6 +412,9 @@ body {
 }
 
 .estrella {
+  display: grid;
+  place-content: center;
+  text-decoration: none;
   min-height: 44px;
   min-width: 44px;
   border: 0;
